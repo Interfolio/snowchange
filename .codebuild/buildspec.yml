@@ -1,0 +1,27 @@
+version: 0.2
+phases:
+  install:
+    commands:
+      - |-
+        PAYLOAD="$(printf "${NOTIFICATION_LAMBDA_PAYLOAD_TEMPLATE}" ${CODEBUILD_BUILD_ID} ${CODEBUILD_WEBHOOK_TRIGGER} ${CODEBUILD_RESOLVED_SOURCE_VERSION})"
+        if [ -n "${NOTIFICATION_LAMBDA_FUNCTION}" ]; then
+          aws lambda invoke \
+            --function-name ${NOTIFICATION_LAMBDA_FUNCTION} \
+            --invocation-type Event \
+            --payload "$(printf "${PAYLOAD}" 'INSTALL' 'IN_PROGRESS')" \
+            /dev/null
+        fi
+  build:
+    commands:
+      - . .codebuild/build.sh
+  post_build:
+    finally:
+      - |-
+        if [ -n "${NOTIFICATION_LAMBDA_FUNCTION}" ]; then
+          STATUS=$([ "${CODEBUILD_BUILD_SUCCEEDING}" -eq 0 ] && printf 'FAILED' || printf 'SUCCEEDED')
+          aws lambda invoke \
+            --function-name ${NOTIFICATION_LAMBDA_FUNCTION} \
+            --invocation-type Event \
+            --payload "$(printf "${PAYLOAD}" 'POST_BUILD' "${STATUS}")" \
+            /dev/null
+        fi
