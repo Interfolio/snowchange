@@ -13,52 +13,6 @@ _metadata_schema_name = 'SNOWCHANGE'
 _metadata_table_name = 'CHANGE_HISTORY'
 
 
-def create_snowflake_con_cur(args):
-    """
-    Creates Snowflake connection and cursor based on environment settings.
-    """
-    if args.snowfl_acct_type == 'PROD':
-        con = snowflake.connector.connect(
-            user='MATILLION',
-            password=os.environ['SNOWFL_MTL_PW'],
-            account=os.environ['SNOWFL_PRD_ACCT'],
-            port=os.environ['SNOWFL_PRD_PORT'],  # use port forwarding from local machine
-            insecure_mode=True  # disable oscp checking from local machine
-        )
-        cur = con.cursor()
-        cur.execute("USE WAREHOUSE ETL")
-        cur.execute("USE " + args.database + '.' + args.schema)
-        return con, cur
-    """
-    Creates Snowflake connection and cursor based on environment settings.
-    """
-    if args.snowfl_acct_type == 'PROD':
-        con = snowflake.connector.connect(
-            user='MATILLION',
-            password=os.environ['SNOWFL_MTL_PW'],
-            account=os.environ['SNOWFL_PRD_ACCT'],
-            port=os.environ['SNOWFL_PRD_PORT'],  # use port forwarding from local machine
-            insecure_mode=True  # disable oscp checking from local machine
-        )
-        cur = con.cursor()
-        cur.execute("USE WAREHOUSE ETL")
-        cur.execute("USE " + args.database + '.' + args.schema)
-        return con, cur
-
-    elif args.snowfl_acct_type == 'TEST':
-        con = snowflake.connector.connect(
-            user='MATILLION',
-            password=os.environ['SNOWFL_MTL_PW'],
-            account=os.environ['SNOWFL_TST_ACCT'],
-            port=os.environ['SNOWFL_TST_PORT'],  # use port forwarding from local machine
-            insecure_mode=True  # disable oscp checking from local machine
-        )
-        cur = con.cursor()
-        cur.execute("USE WAREHOUSE ETL")
-        cur.execute("USE " + args.database + '.' + args.schema)
-        return con, cur
-
-
 def snowchange(root_folder, snowfl_acct_type, change_history_table_override, autocommit, verbose):
     root_folder = os.path.abspath(root_folder)
     if not os.path.isdir(root_folder):
